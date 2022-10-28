@@ -1,34 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, NativeBaseProvider } from 'native-base';
-import * as Location from 'expo-location';
+import Reacr, { useState, useEffect } from 'react';
+import { Dimensions } from 'react-native';
+import { View, NativeBaseProvider } from 'native-base';
+import MapView, { Marker, Circle } from 'react-native-maps';
+import { LocationInfo, RootStackParamList } from '../types';
+import { useIsFocused, useRoute, RouteProp } from '@react-navigation/native';
 
-const GeoListScreen = () => {
-  const [location, setLocation] = useState({});
+const GeoListScreen: React.FC = () => {
+  const isFocused = useIsFocused();
+  const route = useRoute<RouteProp<RootStackParamList, 'GeoList'>>();
+  const [title, setTitle] = useState('University of Greenwich')
+  const [description, setDescription] = useState('Mobile Deadline is here 😭')
+  const [geoLocation, setGeoLocation] = useState<LocationInfo>({
+    latitude: 10.803361559442301,
+    longitude: 106.65274405520121,
+    marker: {
+      latitude: 10.803361559442301,
+      longitude: 106.65274405520121
+    }
+  });
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        console.log('Permission Successfully');
-      } else {
-        console.log('Permission not granted');
-      }
-      const location = await Location.getCurrentPositionAsync();
-      setLocation(location);
-    })();
-  }, []);
+    const photoLocationImage = route.params?.locationInfo;
+    if (photoLocationImage?.latitude && photoLocationImage?.longitude) {
+      setGeoLocation({
+        latitude: photoLocationImage?.latitude,
+        longitude: photoLocationImage.longitude,
+        marker: {
+          latitude: photoLocationImage?.latitude,
+          longitude: photoLocationImage.longitude
+        }
+      });
+      setTitle('Location that you have taken the photo')
+      setDescription('📸📸📸📸📸📸📸')
+    }
+  }, [isFocused]);
 
   return (
     <NativeBaseProvider>
-      <View
-        style={{
-          flex: 1,
-          alignContent: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <Text>dassasadsadasdas</Text>
-        <Text>{JSON.stringify(location)}</Text>
+      <View flex={1} backgroundColor="#fff" alignContent="center" justifyContent="center">
+        <MapView
+          style={{
+            width: Dimensions.get('window').width,
+            height: Dimensions.get('window').height
+          }}
+          showsCompass={true}
+          region={{
+            latitude: geoLocation.latitude,
+            longitude: geoLocation.longitude,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.0005
+          }}
+        >
+          <Marker coordinate={geoLocation.marker} title={title} description={description} />
+          <Circle center={{ latitude: geoLocation.latitude, longitude: geoLocation.longitude }} radius={100} />
+        </MapView>
       </View>
     </NativeBaseProvider>
   );

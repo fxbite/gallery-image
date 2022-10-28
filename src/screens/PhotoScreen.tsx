@@ -3,9 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Camera } from 'expo-camera';
 import { shareAsync } from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
-import * as Location from 'expo-location'
+import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {GeoImage} from '../types'
+import { GeoImage } from '../types';
 import { SafeAreaView, StyleSheet, Text, Button, Image, View } from 'react-native';
 
 const PhotoScreen = () => {
@@ -22,7 +22,7 @@ const PhotoScreen = () => {
       const geoLocationPermission = await Location.requestForegroundPermissionsAsync();
       setHasCameraPermission(cameraPermission.status === 'granted');
       setHasMediaLibraryPermission(mediaLibraryPermission.status === 'granted');
-      setHasGeoLocationPermission(geoLocationPermission.status === 'granted')
+      setHasGeoLocationPermission(geoLocationPermission.status === 'granted');
     })();
   }, []);
 
@@ -50,30 +50,30 @@ const PhotoScreen = () => {
       });
     };
 
-    let savePhoto = () => {
-      MediaLibrary.saveToLibraryAsync(photo.uri).then(async() => {
-        try {
-          const location = await Location.getCurrentPositionAsync();
-          const geoImage: GeoImage = {
-            imageUrl: 'data:image/jpg;base64,' + photo.base64,
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude
-          }
-          const arrayStringValue = await AsyncStorage.getItem('@storage_geoimage')
-          if(arrayStringValue !== null) {
-            const geoImageArray = JSON.parse(arrayStringValue)
-            const updateGeoImageArray = [...geoImageArray, geoImage]
-            await AsyncStorage.setItem('@storage_geoimage', JSON.stringify(updateGeoImageArray))
-          } else {
-            let geoImageArray = []
-            geoImageArray.push(geoImage)
-            await AsyncStorage.setItem('@storage_geoimage', JSON.stringify(geoImageArray))
-          }
-          setPhoto(undefined);
-        } catch (e) {
-          console.log(e)
+    let savePhoto = async () => {
+      try {
+        await MediaLibrary.saveToLibraryAsync(photo.uri);
+        const location = await Location.getCurrentPositionAsync();
+        const geoImage: GeoImage = {
+          imageUrl: 'data:image/jpg;base64,' + photo.base64,
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        };
+        const arrayStringValue = await AsyncStorage.getItem('@storage_geoimage');
+        if (arrayStringValue !== null) {
+          const geoImageArray = JSON.parse(arrayStringValue);
+          const updateGeoImageArray = [...geoImageArray, geoImage];
+          await AsyncStorage.setItem('@storage_geoimage', JSON.stringify(updateGeoImageArray));
+        } else {
+          let geoImageArray: GeoImage[] = [];
+          geoImageArray.push(geoImage);
+          await AsyncStorage.setItem('@storage_geoimage', JSON.stringify(geoImageArray));
         }
-      });
+        setPhoto(undefined);
+        return alert('Saved');
+      } catch (e) {
+        console.log(e);
+      }
     };
 
     return (
