@@ -4,12 +4,13 @@ import { View, NativeBaseProvider } from 'native-base';
 import MapView, { Marker, Circle } from 'react-native-maps';
 import { LocationInfo, RootStackParamList } from '../types';
 import { useIsFocused, useRoute, RouteProp } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const GeoListScreen: React.FC = () => {
   const isFocused = useIsFocused();
   const route = useRoute<RouteProp<RootStackParamList, 'GeoList'>>();
-  const [title, setTitle] = useState('University of Greenwich')
-  const [description, setDescription] = useState('Mobile Deadline is here 😭')
+  const [title, setTitle] = useState('University of Greenwich');
+  const [description, setDescription] = useState('Mobile Deadline is here 😭');
   const [geoLocation, setGeoLocation] = useState<LocationInfo>({
     latitude: 10.803361559442301,
     longitude: 106.65274405520121,
@@ -20,19 +21,35 @@ const GeoListScreen: React.FC = () => {
   });
 
   useEffect(() => {
-    const photoLocationImage = route.params?.locationInfo;
-    if (photoLocationImage?.latitude && photoLocationImage?.longitude) {
-      setGeoLocation({
-        latitude: photoLocationImage?.latitude,
-        longitude: photoLocationImage.longitude,
-        marker: {
-          latitude: photoLocationImage?.latitude,
-          longitude: photoLocationImage.longitude
+    (async () => {
+      const geoImageString = await AsyncStorage.getItem('@storage_geoimage');
+      if (geoImageString !== null) {
+        const photoLocationImage = route.params?.locationInfo;
+        if (photoLocationImage?.latitude && photoLocationImage?.longitude) {
+          setGeoLocation({
+            latitude: photoLocationImage?.latitude,
+            longitude: photoLocationImage.longitude,
+            marker: {
+              latitude: photoLocationImage?.latitude,
+              longitude: photoLocationImage.longitude
+            }
+          });
+          setTitle('Location that you have taken the photo');
+          setDescription('📸📸📸📸📸📸📸');
         }
-      });
-      setTitle('Location that you have taken the photo')
-      setDescription('📸📸📸📸📸📸📸')
-    }
+      } else {
+        setGeoLocation({
+          latitude: 10.803361559442301,
+          longitude: 106.65274405520121,
+          marker: {
+            latitude: 10.803361559442301,
+            longitude: 106.65274405520121
+          }
+        });
+        setTitle('University of Greenwich');
+        setDescription('Mobile Deadline is here 😭');
+      }
+    })();
   }, [isFocused]);
 
   return (
